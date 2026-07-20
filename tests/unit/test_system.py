@@ -1,8 +1,9 @@
 """
 Tests du service de vérification système
 """
+
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from soc_deploy.services.system import SystemChecker, CheckStatus
 
 

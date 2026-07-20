@@ -1,10 +1,10 @@
 """
 Service d'exécution de commandes système
 """
+
 import asyncio
-import subprocess
 import shlex
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict
 from dataclasses import dataclass
 from enum import Enum
 
@@ -13,6 +13,7 @@ from soc_deploy.utils.logger import LoggerManager
 
 class ExecutionStatus(Enum):
     """Statut d'exécution"""
+
     SUCCESS = "success"
     FAILED = "failed"
     TIMEOUT = "timeout"
@@ -22,6 +23,7 @@ class ExecutionStatus(Enum):
 @dataclass
 class CommandResult:
     """Résultat d'une commande"""
+
     command: str
     status: ExecutionStatus
     returncode: int
@@ -66,6 +68,7 @@ class CommandExecutor:
         self.logger.info(f"Exécution : {command[:100]}...")
 
         import time
+
         start_time = time.time()
 
         try:
@@ -87,8 +90,7 @@ class CommandExecutor:
 
             try:
                 stdout, stderr = await asyncio.wait_for(
-                    process.communicate(),
-                    timeout=timeout
+                    process.communicate(), timeout=timeout
                 )
             except asyncio.TimeoutError:
                 process.kill()
@@ -110,10 +112,14 @@ class CommandExecutor:
 
             if returncode == 0:
                 status = ExecutionStatus.SUCCESS
-                self.logger.info(f"Succès : {command[:50]}... (duration={duration:.2f}s)")
+                self.logger.info(
+                    f"Succès : {command[:50]}... (duration={duration:.2f}s)"
+                )
             else:
                 status = ExecutionStatus.FAILED
-                self.logger.error(f"Échec ({returncode}): {command[:50]}... {stderr_str[:200]}")
+                self.logger.error(
+                    f"Échec ({returncode}): {command[:50]}... {stderr_str[:200]}"
+                )
 
             return CommandResult(
                 command=command,
@@ -170,7 +176,9 @@ class CommandExecutor:
             last_result = result
 
             if attempt < retries:
-                self.logger.warning(f"Tentative {attempt} échouée, nouvelle tentative dans {delay}s")
+                self.logger.warning(
+                    f"Tentative {attempt} échouée, nouvelle tentative dans {delay}s"
+                )
                 await asyncio.sleep(delay)
 
         self.logger.error(f"Toutes les tentatives ont échoué après {retries} essais")
@@ -215,7 +223,7 @@ class CommandExecutor:
             # Nettoyer le fichier temporaire
             try:
                 os.unlink(script_path)
-            except:
+            except Exception:
                 pass
 
     async def check_command_exists(self, command: str) -> bool:
@@ -231,7 +239,9 @@ class CommandExecutor:
         result = await self.execute(f"which {command}")
         return result.status == ExecutionStatus.SUCCESS
 
-    async def get_command_version(self, command: str, version_flag: str = "--version") -> Optional[str]:
+    async def get_command_version(
+        self, command: str, version_flag: str = "--version"
+    ) -> Optional[str]:
         """
         Récupère la version d'une commande
 
