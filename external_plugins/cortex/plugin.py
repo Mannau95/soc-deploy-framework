@@ -1,8 +1,9 @@
 from soc_deploy.plugins.base import PluginBase, PluginMetadata
-from .install import CortexInstaller
-from .configure import CortexConfigurator
-from .validate import CortexValidator
+
 from .backup_restore import CortexBackupRestore
+from .configure import CortexConfigurator
+from .install import CortexInstaller
+from .validate import CortexValidator
 
 
 class CortexPlugin(PluginBase):

@@ -3,10 +3,11 @@ Gestionnaire de base de données SQLite
 """
 
 import json
-import aiosqlite
-from pathlib import Path
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import aiosqlite
 
 from soc_deploy.utils.logger import LoggerManager
 
@@ -94,18 +95,14 @@ class DatabaseManager:
     async def get_deployment(self, deployment_id: str) -> Optional[Dict[str, Any]]:
         try:
             db = await self.get_connection()
-            cursor = await db.execute(
-                "SELECT * FROM deployments WHERE id = ?", (deployment_id,)
-            )
+            cursor = await db.execute("SELECT * FROM deployments WHERE id = ?", (deployment_id,))
             row = await cursor.fetchone()
             return dict(row) if row else None
         except Exception as e:
             self.logger.error(f"Erreur récupération déploiement: {e}")
             return None
 
-    async def list_deployments(
-        self, status: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    async def list_deployments(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
         try:
             db = await self.get_connection()
             if status:
@@ -114,9 +111,7 @@ class DatabaseManager:
                     (status,),
                 )
             else:
-                cursor = await db.execute(
-                    "SELECT * FROM deployments ORDER BY created_at DESC"
-                )
+                cursor = await db.execute("SELECT * FROM deployments ORDER BY created_at DESC")
             rows = await cursor.fetchall()
             return [dict(row) for row in rows]
         except Exception as e:
@@ -192,9 +187,7 @@ class DatabaseManager:
         step: str,
         state_data: Dict[str, Any],
     ) -> Optional[str]:
-        checkpoint_id = (
-            f"{deployment_id}_{tool_name}_{step}_{datetime.now().timestamp()}"
-        )
+        checkpoint_id = f"{deployment_id}_{tool_name}_{step}_{datetime.now().timestamp()}"
         try:
             db = await self.get_connection()
             await db.execute(
@@ -261,9 +254,7 @@ class DatabaseManager:
             self.logger.error(f"Erreur enregistrement sauvegarde: {e}")
             return False
 
-    async def get_backups_for_deployment(
-        self, deployment_id: str
-    ) -> List[Dict[str, Any]]:
+    async def get_backups_for_deployment(self, deployment_id: str) -> List[Dict[str, Any]]:
         try:
             db = await self.get_connection()
             cursor = await db.execute(

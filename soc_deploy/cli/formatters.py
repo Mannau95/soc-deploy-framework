@@ -1,5 +1,6 @@
 from rich.console import Console
 from rich.table import Table
+
 from soc_deploy.models.report import DeploymentReport
 
 console = Console()
@@ -11,9 +12,7 @@ def print_report(report: DeploymentReport):
         console.print("[yellow]Aucun outil déployé[/yellow]")
         return
 
-    table = Table(
-        title=f"Déploiement {report.deployment_id} - Statut : {report.status}"
-    )
+    table = Table(title=f"Déploiement {report.deployment_id} - Statut : {report.status}")
     table.add_column("Outil", style="cyan")
     table.add_column("Statut", style="green")
     table.add_column("Détails", style="white")

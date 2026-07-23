@@ -7,16 +7,16 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from soc_deploy.core.context import ExecutionContext
-from soc_deploy.core.state import StateManager, ToolStatus
 from soc_deploy.core.exceptions import (
-    SOCDeployError,
-    PrerequisitesError,
-    InstallationError,
     ConfigurationError,
+    InstallationError,
+    PrerequisitesError,
+    SOCDeployError,
     ValidationError,
 )
-from soc_deploy.deployment.planner import DeploymentPlanner
+from soc_deploy.core.state import StateManager, ToolStatus
 from soc_deploy.deployment.dependency import DependencyResolver
+from soc_deploy.deployment.planner import DeploymentPlanner
 from soc_deploy.models.report import DeploymentReport, ToolReport
 
 
@@ -55,47 +55,79 @@ class Orchestrator:
         self.ctx.interactive = interactive
         self.ctx.clear_errors()
 
-        # 1. Vérifications préliminaires
+        # Étape 1 : vérifications préliminaires
+        if not await self._run_preliminary_checks(interactive):
+            raise PrerequisitesError("Prérequis système non satisfaits")
+
+        # Étape 2 : planification
+        plan = self._plan_deployment(tools, profile)
+
+        # Étape 3 : création de l'enregistrement du déploiement
+        deployment_id, tool_order = await self._create_deployment_record(tools, profile, plan)
+
+        # Étape 4 : exécution des déploiements
+        tool_reports = await self._execute_deployment_loop(
+            deployment_id, tool_order, plan, interactive
+        )
+
+        # Étape 5 : finalisation
+        return await self._finalize_deployment(deployment_id, tool_reports)
+
+    # --- Sous-fonctions privées pour la refactorisation ---
+
+    async def _run_preliminary_checks(self, interactive: bool) -> bool:
+        """Vérifie les prérequis système."""
         self.log.info("Vérification des prérequis système...")
         checks = self.ctx.system_checker.run_all_checks()
         critical_failures = [c for c in checks if c.status.name == "ERROR"]
         if critical_failures:
             self.log.error("Prérequis système non satisfaits")
             if interactive:
-                # Afficher le rapport et demander continuation
-                pass
+                # En interactif, on pourrait afficher le rapport et demander continuation
+                # Pour l'instant, on retourne False pour échouer
+                return False
             else:
-                raise PrerequisitesError(
-                    f"Échec des prérequis: {len(critical_failures)} erreurs"
-                )
+                raise PrerequisitesError(f"Échec des prérequis: {len(critical_failures)} erreurs")
+        return True
 
-        # 2. Planifier le déploiement
+    def _plan_deployment(self, tools: List[str], profile: Optional[str]):
+        """Planifie le déploiement."""
         self.log.info("Planification du déploiement...")
         plan = self.planner.create_plan(tools, profile)
         if plan.conflicts:
             self.log.warning(f"Conflits détectés: {plan.conflicts}")
-            # Gérer les conflits...
+            # Gérer les conflits (pour l'instant on continue)
+        return plan
 
-        # 3. Créer l'enregistrement du déploiement
+    async def _create_deployment_record(
+        self, tools: List[str], profile: Optional[str], plan
+    ) -> tuple[str, List[str]]:
+        """Crée l'enregistrement du déploiement et l'ordre des outils."""
         deployment_id = await self.state.create_deployment(
             name=f"SOC-{'-'.join(tools[:3])}", profile=profile
         )
         await self.state.start_deployment(deployment_id)
 
-        # 4. Ajouter les outils dans l'ordre
+        # Ajouter les outils dans l'ordre
         for i, tool_name in enumerate(plan.order):
-            await self.state.add_tool_to_deployment(
-                deployment_id, tool_name, order=i + 1
-            )
+            await self.state.add_tool_to_deployment(deployment_id, tool_name, order=i + 1)
 
         self.ctx.set_step(deployment_id, "", "PLAN", 0, len(plan.order))
+        return deployment_id, plan.order
 
-        # 5. Exécuter le déploiement outil par outil
+    async def _execute_deployment_loop(
+        self,
+        deployment_id: str,
+        tool_order: List[str],
+        plan,
+        interactive: bool,
+    ) -> List[ToolReport]:
+        """Exécute le déploiement outil par outil."""
         tool_reports = []
-        for idx, tool_name in enumerate(plan.order, start=1):
-            self.ctx.set_step(deployment_id, tool_name, "DEPLOY", idx, len(plan.order))
+        for idx, tool_name in enumerate(tool_order, start=1):
+            self.ctx.set_step(deployment_id, tool_name, "DEPLOY", idx, len(tool_order))
             self.log.info(
-                f"\n{'=' * 50}\nDéploiement de {tool_name} ({idx}/{len(plan.order)})\n{'=' * 50}"
+                f"\n{'=' * 50}\nDéploiement de {tool_name} ({idx}/{len(tool_order)})\n{'=' * 50}"
             )
 
             try:
@@ -105,13 +137,13 @@ class Orchestrator:
                 tool_reports.append(tool_report)
 
                 if tool_report.status == "failed":
-                    # Décision : arrêter ou continuer ?
+                    self.log.error(f"Échec de {tool_name}")
                     if interactive:
-                        # demander à l'utilisateur
-                        pass
+                        # En interactif, on pourrait demander à l'utilisateur
+                        # Pour simplifier, on arrête
+                        break
                     else:
                         # En mode non-interactif, on arrête par défaut
-                        self.log.error(f"Échec de {tool_name}, arrêt du déploiement")
                         break
             except Exception as e:
                 self.log.exception(f"Erreur inattendue pour {tool_name}: {e}")
@@ -129,12 +161,17 @@ class Orchestrator:
                 deployment_id, tool_name, "POST_DEPLOY", {"tool_status": "completed"}
             )
 
-            # Si interactif, proposer pause/continuer
-            if interactive and idx < len(plan.order):
-                # afficher menu pause/continuer
+            # Si interactif, proposer pause/continuer (ici simplifié)
+            if interactive and idx < len(tool_order):
+                # afficher menu pause/continuer (on passe pour l'instant)
                 pass
 
-        # 6. Finalisation
+        return tool_reports
+
+    async def _finalize_deployment(
+        self, deployment_id: str, tool_reports: List[ToolReport]
+    ) -> DeploymentReport:
+        """Finalise le déploiement."""
         all_success = all(r.status == "success" for r in tool_reports)
         if all_success:
             await self.state.complete_deployment(deployment_id)
@@ -146,6 +183,8 @@ class Orchestrator:
             status="success" if all_success else "partial_failure",
             tools=tool_reports,
         )
+
+    # --- Les autres méthodes restent inchangées ---
 
     async def _deploy_single_tool(
         self,
@@ -160,20 +199,14 @@ class Orchestrator:
         if not plugin:
             raise SOCDeployError(f"Plugin introuvable pour {tool_name}")
 
-        await self.state.set_tool_status(
-            deployment_id, tool_name, ToolStatus.IN_PROGRESS
-        )
+        await self.state.set_tool_status(deployment_id, tool_name, ToolStatus.IN_PROGRESS)
 
         try:
             # 1. Prérequis
-            await self.state.save_checkpoint(
-                deployment_id, tool_name, "PREREQ_CHECK", {}
-            )
+            await self.state.save_checkpoint(deployment_id, tool_name, "PREREQ_CHECK", {})
             prereq_result = await plugin.check_prerequisites(self.ctx)
             if not prereq_result.get("success", False):
-                raise PrerequisitesError(
-                    f"Prérequis {tool_name} non satisfaits: {prereq_result}"
-                )
+                raise PrerequisitesError(f"Prérequis {tool_name} non satisfaits: {prereq_result}")
 
             # 2. Backup (avant toute modification)
             await self.state.save_checkpoint(deployment_id, tool_name, "BACKUP", {})
@@ -189,9 +222,7 @@ class Orchestrator:
             install_result = await plugin.install(self.ctx, user_config)
             if not install_result.get("success", False):
                 # Tentative de rollback automatique
-                self.log.warning(
-                    f"Installation de {tool_name} échouée, tentative de rollback"
-                )
+                self.log.warning(f"Installation de {tool_name} échouée, tentative de rollback")
                 await plugin.rollback(self.ctx)
                 raise InstallationError(f"Installation échouée: {install_result}")
 
@@ -205,9 +236,7 @@ class Orchestrator:
             await self.state.save_checkpoint(deployment_id, tool_name, "VALIDATE", {})
             validation_result = await plugin.validate(self.ctx)
             if not validation_result.get("success", False):
-                self.log.error(
-                    f"Validation échouée pour {tool_name}: {validation_result}"
-                )
+                self.log.error(f"Validation échouée pour {tool_name}: {validation_result}")
                 # Optionnel : rollback ?
                 raise ValidationError(f"Validation échouée: {validation_result}")
 
@@ -219,15 +248,11 @@ class Orchestrator:
 
         except SOCDeployError as e:
             self.log.error(f"Échec déploiement {tool_name}: {e}")
-            await self.state.set_tool_status(
-                deployment_id, tool_name, ToolStatus.FAILED
-            )
+            await self.state.set_tool_status(deployment_id, tool_name, ToolStatus.FAILED)
             return ToolReport(tool_name=tool_name, status="failed", error=str(e))
         except Exception as e:
             self.log.exception(f"Erreur inconnue: {e}")
-            await self.state.set_tool_status(
-                deployment_id, tool_name, ToolStatus.FAILED
-            )
+            await self.state.set_tool_status(deployment_id, tool_name, ToolStatus.FAILED)
             return ToolReport(tool_name=tool_name, status="failed", error=str(e))
 
     async def resume_deployment(self, deployment_id: str) -> DeploymentReport:
@@ -245,9 +270,7 @@ class Orchestrator:
         step = resume_info["step"]
         state_data = resume_info["state_data"]
 
-        self.log.info(
-            f"Reprise du déploiement {deployment_id} pour {tool_name} à l'étape {step}"
-        )
+        self.log.info(f"Reprise du déploiement {deployment_id} pour {tool_name} à l'étape {step}")
 
         # Récupérer la liste complète des outils
         tools = await self.state.get_deployment_tools(deployment_id)
@@ -260,9 +283,7 @@ class Orchestrator:
         # Si l'outil en cours est déjà dans la liste, on le déploie en premier
         # (gestion simplifiée : on reprend à partir de l'outil spécifié)
         tool_reports = []
-        start_idx = next(
-            (i for i, t in enumerate(remaining_tools) if t == tool_name), 0
-        )
+        start_idx = next((i for i, t in enumerate(remaining_tools) if t == tool_name), 0)
 
         for tool_name in remaining_tools[start_idx:]:
             try:
@@ -273,9 +294,7 @@ class Orchestrator:
                 if report.status == "failed":
                     break
             except Exception as e:
-                tool_reports.append(
-                    ToolReport(tool_name=tool_name, status="failed", error=str(e))
-                )
+                tool_reports.append(ToolReport(tool_name=tool_name, status="failed", error=str(e)))
                 break
 
         all_success = all(r.status == "success" for r in tool_reports)

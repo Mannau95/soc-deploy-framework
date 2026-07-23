@@ -1,8 +1,9 @@
 from soc_deploy.plugins.base import PluginBase, PluginMetadata
-from .install import OpenVASInstaller
-from .configure import OpenVASConfigurator
-from .validate import OpenVASValidator
+
 from .backup_restore import OpenVASBackupRestore
+from .configure import OpenVASConfigurator
+from .install import OpenVASInstaller
+from .validate import OpenVASValidator
 
 
 class OpenVASPlugin(PluginBase):

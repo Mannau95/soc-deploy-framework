@@ -3,6 +3,7 @@ Tests du service d'exécution de commandes
 """
 
 import pytest
+
 from soc_deploy.services.executor import CommandExecutor, ExecutionStatus
 from soc_deploy.utils.logger import LoggerManager
 

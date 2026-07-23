@@ -2,8 +2,9 @@
 Planificateur de déploiement
 """
 
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
 from .dependency import DependencyResolver
 
 
@@ -19,9 +20,7 @@ class DeploymentPlanner:
     def __init__(self, dependency_resolver: DependencyResolver):
         self.resolver = dependency_resolver
 
-    def create_plan(
-        self, tools: List[str], profile: Optional[str] = None
-    ) -> DeploymentPlan:
+    def create_plan(self, tools: List[str], profile: Optional[str] = None) -> DeploymentPlan:
         # Résoudre l'ordre via le résolveur de dépendances
         order = self.resolver.suggest_install_order(tools)
         # Les configurations seraient chargées depuis un profil

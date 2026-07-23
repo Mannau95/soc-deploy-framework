@@ -4,9 +4,9 @@ Service d'exécution de commandes système
 
 import asyncio
 import shlex
-from typing import Optional, Dict
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict, Optional
 
 from soc_deploy.utils.logger import LoggerManager
 
@@ -89,9 +89,7 @@ class CommandExecutor:
             )
 
             try:
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=timeout
-                )
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
             except asyncio.TimeoutError:
                 process.kill()
                 await process.wait()
@@ -112,14 +110,10 @@ class CommandExecutor:
 
             if returncode == 0:
                 status = ExecutionStatus.SUCCESS
-                self.logger.info(
-                    f"Succès : {command[:50]}... (duration={duration:.2f}s)"
-                )
+                self.logger.info(f"Succès : {command[:50]}... (duration={duration:.2f}s)")
             else:
                 status = ExecutionStatus.FAILED
-                self.logger.error(
-                    f"Échec ({returncode}): {command[:50]}... {stderr_str[:200]}"
-                )
+                self.logger.error(f"Échec ({returncode}): {command[:50]}... {stderr_str[:200]}")
 
             return CommandResult(
                 command=command,
@@ -201,8 +195,8 @@ class CommandExecutor:
         Returns:
             CommandResult
         """
-        import tempfile
         import os
+        import tempfile
 
         # Créer un fichier temporaire pour le script
         with tempfile.NamedTemporaryFile(mode="w", suffix=".sh", delete=False) as f:

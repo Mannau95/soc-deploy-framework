@@ -5,10 +5,11 @@ Plugin Wazuh – Stack complète (Indexer, Server, Dashboard, Agent)
 from typing import Any, Dict
 
 from soc_deploy.plugins.base import PluginBase, PluginMetadata
-from .install import WazuhInstaller
-from .configure import WazuhConfigurator
-from .validate import WazuhValidator
+
 from .backup_restore import WazuhBackupRestore
+from .configure import WazuhConfigurator
+from .install import WazuhInstaller
+from .validate import WazuhValidator
 
 
 class WazuhPlugin(PluginBase):

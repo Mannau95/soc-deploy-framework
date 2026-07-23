@@ -2,9 +2,11 @@
 Tests du service de sauvegarde
 """
 
-import pytest
 import tempfile
 from pathlib import Path
+
+import pytest
+
 from soc_deploy.services.backup import BackupManager, BackupTarget, BackupType
 from soc_deploy.utils.logger import LoggerManager
 
@@ -52,9 +54,7 @@ class TestBackupManager:
         original = tmp_path / "original.txt"
         original.write_text("hello world")
 
-        target = BackupTarget(
-            paths=[original], tool_name="test", backup_type=BackupType.CUSTOM
-        )
+        target = BackupTarget(paths=[original], tool_name="test", backup_type=BackupType.CUSTOM)
         backup = await manager.create_backup(target)
 
         # Modifier le fichier

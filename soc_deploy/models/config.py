@@ -2,9 +2,10 @@
 Modèles de configuration Pydantic
 """
 
-from typing import List
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import List
+
+from pydantic import BaseModel, Field
 
 
 class DeploymentMode(str, Enum):

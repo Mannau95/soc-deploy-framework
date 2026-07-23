@@ -4,20 +4,22 @@ Point d'entrée CLI du framework
 
 import asyncio
 from typing import Optional
+
 import typer
 from rich.console import Console
+
 from soc_deploy import __version__
 from soc_deploy.cli.commands import (
-    check_command,
-    deploy_command,
-    status_command,
-    install_command,
-    configure_command,
     backup_command,
-    restore_command,
-    validate_command,
-    uninstall_command,
+    check_command,
+    configure_command,
+    deploy_command,
+    install_command,
     interactive_command,
+    restore_command,
+    status_command,
+    uninstall_command,
+    validate_command,
 )
 
 app = typer.Typer(

@@ -4,12 +4,12 @@ Service de vérification système
 
 import os
 import platform
+import shutil
 import socket
 import subprocess
-import shutil
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from soc_deploy.models.config import SystemInfo
 
@@ -257,9 +257,7 @@ class SystemChecker:
     def check_systemd(self) -> CheckResult:
         """Vérifie la présence de systemd"""
         if self._check_systemd():
-            return CheckResult(
-                name="Systemd", status=CheckStatus.OK, message="Systemd disponible"
-            )
+            return CheckResult(name="Systemd", status=CheckStatus.OK, message="Systemd disponible")
         else:
             return CheckResult(
                 name="Systemd",
@@ -285,9 +283,7 @@ class SystemChecker:
         """Vérifie le statut SELinux"""
         mode = self._get_selinux_mode()
         if mode == "disabled":
-            return CheckResult(
-                name="SELinux", status=CheckStatus.OK, message="SELinux désactivé"
-            )
+            return CheckResult(name="SELinux", status=CheckStatus.OK, message="SELinux désactivé")
         elif mode == "permissive":
             return CheckResult(
                 name="SELinux",
@@ -305,9 +301,7 @@ class SystemChecker:
         """Vérifie le statut AppArmor"""
         status = self._get_apparmor_status()
         if status == "inactive":
-            return CheckResult(
-                name="AppArmor", status=CheckStatus.OK, message="AppArmor inactif"
-            )
+            return CheckResult(name="AppArmor", status=CheckStatus.OK, message="AppArmor inactif")
         else:
             return CheckResult(
                 name="AppArmor",
@@ -324,9 +318,7 @@ class SystemChecker:
                 message="Pare-feu actif - ports à ouvrir manuellement",
             )
         else:
-            return CheckResult(
-                name="Pare-feu", status=CheckStatus.OK, message="Pare-feu inactif"
-            )
+            return CheckResult(name="Pare-feu", status=CheckStatus.OK, message="Pare-feu inactif")
 
     def check_ports(self, required_ports: List[int]) -> List[CheckResult]:
         """Vérifie la disponibilité des ports"""
@@ -389,9 +381,7 @@ class SystemChecker:
             with open("/proc/meminfo") as f:
                 for line in f:
                     if line.startswith("MemTotal:"):
-                        return int(line.split()[1]) / (
-                            1024 * 1024
-                        )  # Convertir KB en GB
+                        return int(line.split()[1]) / (1024 * 1024)  # Convertir KB en GB
         except Exception:
             pass
 
@@ -434,9 +424,7 @@ class SystemChecker:
     def _check_sudo(self) -> bool:
         """Vérifie les privilèges sudo"""
         try:
-            result = subprocess.run(
-                ["sudo", "-n", "true"], capture_output=True, timeout=5
-            )
+            result = subprocess.run(["sudo", "-n", "true"], capture_output=True, timeout=5)
             return result.returncode == 0
         except Exception:
             return False
@@ -444,9 +432,7 @@ class SystemChecker:
     def _check_systemd(self) -> bool:
         """Vérifie la présence de systemd"""
         try:
-            result = subprocess.run(
-                ["systemctl", "--version"], capture_output=True, timeout=5
-            )
+            result = subprocess.run(["systemctl", "--version"], capture_output=True, timeout=5)
             return result.returncode == 0
         except Exception:
             return False
@@ -464,9 +450,7 @@ class SystemChecker:
     def _get_selinux_mode(self) -> str:
         """Récupère le mode SELinux"""
         try:
-            result = subprocess.run(
-                ["getenforce"], capture_output=True, text=True, timeout=5
-            )
+            result = subprocess.run(["getenforce"], capture_output=True, text=True, timeout=5)
             return result.stdout.strip().lower()
         except Exception:
             return "unknown"
@@ -474,9 +458,7 @@ class SystemChecker:
     def _get_apparmor_status(self) -> str:
         """Récupère le statut AppArmor"""
         try:
-            result = subprocess.run(
-                ["aa-status", "--enabled"], capture_output=True, timeout=5
-            )
+            result = subprocess.run(["aa-status", "--enabled"], capture_output=True, timeout=5)
             return "active" if result.returncode == 0 else "inactive"
         except Exception:
             return "unknown"
@@ -485,9 +467,7 @@ class SystemChecker:
         """Vérifie si le pare-feu est actif"""
         # Vérifier ufw
         try:
-            result = subprocess.run(
-                ["ufw", "status"], capture_output=True, text=True, timeout=5
-            )
+            result = subprocess.run(["ufw", "status"], capture_output=True, text=True, timeout=5)
             if "Status: active" in result.stdout:
                 return True
         except Exception:
@@ -495,9 +475,7 @@ class SystemChecker:
 
         # Vérifier firewalld
         try:
-            result = subprocess.run(
-                ["firewall-cmd", "--state"], capture_output=True, timeout=5
-            )
+            result = subprocess.run(["firewall-cmd", "--state"], capture_output=True, timeout=5)
             if result.returncode == 0:
                 return True
         except Exception:
@@ -509,9 +487,7 @@ class SystemChecker:
         """Récupère les ports utilisés"""
         ports = []
         try:
-            result = subprocess.run(
-                ["ss", "-tlnp"], capture_output=True, text=True, timeout=5
-            )
+            result = subprocess.run(["ss", "-tlnp"], capture_output=True, text=True, timeout=5)
             for line in result.stdout.split("\n"):
                 if "LISTEN" in line:
                     parts = line.split()

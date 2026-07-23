@@ -4,8 +4,8 @@ Système de journalisation
 
 import logging
 import sys
-from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 
 class LoggerManager:
@@ -32,9 +32,7 @@ class LoggerManager:
             return logger
 
         # Format
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
         # Handler fichier
         self.log_dir.mkdir(parents=True, exist_ok=True)

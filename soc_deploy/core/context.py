@@ -4,7 +4,7 @@ Contexte d'exécution partagé entre tous les composants
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 try:
     from pydantic import BaseModel
@@ -15,15 +15,15 @@ from soc_deploy.models.config import FrameworkConfig, SystemInfo
 from soc_deploy.utils.logger import LoggerManager
 
 if TYPE_CHECKING:
-    from soc_deploy.services.executor import CommandExecutor
-    from soc_deploy.services.system import SystemChecker
-    from soc_deploy.services.package import PackageManager
-    from soc_deploy.services.docker import DockerManager
-    from soc_deploy.services.file import FileManager
-    from soc_deploy.services.backup import BackupManager
-    from soc_deploy.services.validator import ValidatorService
     from soc_deploy.database.manager import DatabaseManager
     from soc_deploy.plugins.registry import PluginRegistry
+    from soc_deploy.services.backup import BackupManager
+    from soc_deploy.services.docker import DockerManager
+    from soc_deploy.services.executor import CommandExecutor
+    from soc_deploy.services.file import FileManager
+    from soc_deploy.services.package import PackageManager
+    from soc_deploy.services.system import SystemChecker
+    from soc_deploy.services.validator import ValidatorService
 
 
 class DeploymentStep(BaseModel):

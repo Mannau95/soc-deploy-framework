@@ -2,10 +2,12 @@
 Tests de l'orchestrateur principal
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from soc_deploy.core.engine import Orchestrator
+
+import pytest
+
 from soc_deploy.core.context import ExecutionContext
+from soc_deploy.core.engine import Orchestrator
 from soc_deploy.core.state import StateManager
 from soc_deploy.plugins.base import PluginBase
 

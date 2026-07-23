@@ -3,10 +3,11 @@ Plugin Zeek – Analyse réseau et logs
 """
 
 from soc_deploy.plugins.base import PluginBase, PluginMetadata
-from .install import ZeekInstaller
-from .configure import ZeekConfigurator
-from .validate import ZeekValidator
+
 from .backup_restore import ZeekBackupRestore
+from .configure import ZeekConfigurator
+from .install import ZeekInstaller
+from .validate import ZeekValidator
 
 
 class ZeekPlugin(PluginBase):

@@ -2,9 +2,9 @@
 Sauvegarde et restauration des configurations et données Wazuh
 """
 
-from typing import Any, Dict
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict
 
 
 class BackupType(Enum):

@@ -2,10 +2,12 @@
 Tests du gestionnaire de paquets
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from soc_deploy.services.package import PackageManager, PackageManagerType
+
+import pytest
+
 from soc_deploy.services.executor import CommandExecutor, CommandResult, ExecutionStatus
+from soc_deploy.services.package import PackageManager, PackageManagerType
 
 
 class TestPackageManager:

@@ -3,6 +3,7 @@ Tests d'intégration : vérifications système
 """
 
 import pytest
+
 from soc_deploy.services.system import CheckStatus
 
 

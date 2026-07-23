@@ -1,8 +1,9 @@
 from soc_deploy.plugins.base import PluginBase, PluginMetadata
-from .install import MispInstaller
-from .configure import MispConfigurator
-from .validate import MispValidator
+
 from .backup_restore import MispBackupRestore
+from .configure import MispConfigurator
+from .install import MispInstaller
+from .validate import MispValidator
 
 
 class MispPlugin(PluginBase):

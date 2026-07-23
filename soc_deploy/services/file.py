@@ -2,14 +2,14 @@
 Service de gestion des fichiers
 """
 
+import json
 import os
 import shutil
-import yaml
-import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-from datetime import datetime
 
+import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 
 
@@ -87,9 +87,7 @@ class FileManager:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    def write_json(
-        self, path: Union[str, Path], data: Dict[str, Any], indent: int = 2
-    ) -> None:
+    def write_json(self, path: Union[str, Path], data: Dict[str, Any], indent: int = 2) -> None:
         """
         Écrit un fichier JSON
 
@@ -197,9 +195,7 @@ class FileManager:
         """
         os.chmod(path, mode)
 
-    def set_owner(
-        self, path: Union[str, Path], user: str, group: Optional[str] = None
-    ) -> None:
+    def set_owner(self, path: Union[str, Path], user: str, group: Optional[str] = None) -> None:
         """
         Modifie le propriétaire d'un fichier
 
@@ -208,8 +204,8 @@ class FileManager:
             user: Utilisateur
             group: Groupe (optionnel)
         """
-        import pwd
         import grp
+        import pwd
 
         uid = pwd.getpwnam(user).pw_uid
         gid = grp.getgrnam(group).gr_gid if group else -1
@@ -261,9 +257,7 @@ class FileManager:
         template = Template(template_string)
         return template.render(**context)
 
-    def backup_file(
-        self, path: Union[str, Path], backup_dir: Union[str, Path]
-    ) -> Optional[Path]:
+    def backup_file(self, path: Union[str, Path], backup_dir: Union[str, Path]) -> Optional[Path]:
         """
         Sauvegarde un fichier
 
@@ -288,9 +282,7 @@ class FileManager:
         shutil.copy2(path, backup_path)
         return backup_path
 
-    def restore_file(
-        self, backup_path: Union[str, Path], target_path: Union[str, Path]
-    ) -> bool:
+    def restore_file(self, backup_path: Union[str, Path], target_path: Union[str, Path]) -> bool:
         """
         Restaure un fichier depuis une sauvegarde
 

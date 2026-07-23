@@ -2,17 +2,17 @@
 Service de validation des déploiements
 """
 
-import ssl
+import http.client
 import socket
+import ssl
 import time
-from typing import List, Dict, Any, Optional, Callable
-from urllib.parse import urlparse
 from dataclasses import dataclass
 from enum import Enum
-
+from typing import Any, Callable, Dict, List, Optional
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
-import http.client
+
 from soc_deploy.services.executor import CommandExecutor, ExecutionStatus
 from soc_deploy.utils.logger import LoggerManager
 
@@ -216,9 +216,7 @@ class ValidatorService:
                     # Vérifier la date d'expiration
                     import datetime
 
-                    not_after = datetime.datetime.strptime(
-                        cert["notAfter"], "%b %d %H:%M:%S %Y %Z"
-                    )
+                    not_after = datetime.datetime.strptime(cert["notAfter"], "%b %d %H:%M:%S %Y %Z")
                     days_left = (not_after - datetime.datetime.utcnow()).days
 
                     if days_left > 30:
@@ -285,9 +283,7 @@ class ValidatorService:
                 duration=duration,
             )
 
-    async def validate_disk_space(
-        self, path: str = "/", min_gb: float = 10.0
-    ) -> ValidationResult:
+    async def validate_disk_space(self, path: str = "/", min_gb: float = 10.0) -> ValidationResult:
         """
         Vérifie l'espace disque disponible
 
@@ -320,9 +316,7 @@ class ValidatorService:
                 duration=duration,
             )
 
-    async def validate_memory_usage(
-        self, max_percent: float = 90.0
-    ) -> ValidationResult:
+    async def validate_memory_usage(self, max_percent: float = 90.0) -> ValidationResult:
         """
         Vérifie l'utilisation mémoire
 
@@ -333,9 +327,7 @@ class ValidatorService:
             ValidationResult
         """
         start = time.time()
-        result = await self.executor.execute(
-            "free | grep Mem | awk '{print $3/$2 * 100.0}'"
-        )
+        result = await self.executor.execute("free | grep Mem | awk '{print $3/$2 * 100.0}'")
         duration = time.time() - start
 
         if result.status != ExecutionStatus.SUCCESS:

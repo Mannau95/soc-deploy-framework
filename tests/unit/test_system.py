@@ -2,9 +2,11 @@
 Tests du service de vérification système
 """
 
-import pytest
 from unittest.mock import patch
-from soc_deploy.services.system import SystemChecker, CheckStatus
+
+import pytest
+
+from soc_deploy.services.system import CheckStatus, SystemChecker
 
 
 class TestSystemChecker:

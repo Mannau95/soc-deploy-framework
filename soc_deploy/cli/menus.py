@@ -1,10 +1,11 @@
 import questionary
 from rich.console import Console
 from rich.panel import Panel
+
+from soc_deploy.cli.formatters import print_report
 from soc_deploy.core.context import ExecutionContext
 from soc_deploy.core.engine import Orchestrator
 from soc_deploy.core.state import StateManager
-from soc_deploy.cli.formatters import print_report
 
 console = Console()
 
@@ -17,6 +18,18 @@ class InteractiveDeployMenu:
 
     async def run(self):
         console.print(Panel.fit("🚀 SOC Deployment Framework", border_style="green"))
+        # Mapping des préfixes de choix vers les méthodes
+        choice_map = {
+            "1": self._deploy_soc,
+            "2": self._install_tool,
+            "3": self._configure_tool,
+            "4": self._backup_tool,
+            "5": self._restore_tool,
+            "6": self._validate_tool,
+            "7": self._health_check,
+            "8": self._uninstall_tool,
+            "9": self._resume_deployment,
+        }
         while True:
             choice = await questionary.select(
                 "Que souhaitez-vous faire ?",
@@ -34,27 +47,17 @@ class InteractiveDeployMenu:
                 ],
             ).ask_async()
 
-            if choice.startswith("1"):
-                await self._deploy_soc()
-            elif choice.startswith("2"):
-                await self._install_tool()
-            elif choice.startswith("3"):
-                await self._configure_tool()
-            elif choice.startswith("4"):
-                await self._backup_tool()
-            elif choice.startswith("5"):
-                await self._restore_tool()
-            elif choice.startswith("6"):
-                await self._validate_tool()
-            elif choice.startswith("7"):
-                await self._health_check()
-            elif choice.startswith("8"):
-                await self._uninstall_tool()
-            elif choice.startswith("9"):
-                await self._resume_deployment()
+            # Extraire le numéro (avant le point ou l'espace)
+            key = choice.split(".")[0] if "." in choice else choice.split()[0]
+            if key == "10":
+                break
+            action = choice_map.get(key)
+            if action:
+                await action()
             else:
                 break
 
+    # Les autres méthodes restent strictement identiques
     async def _deploy_soc(self):
         tools = await self._select_tools()
         if not tools:
@@ -97,16 +100,12 @@ class InteractiveDeployMenu:
                     schema["message"], default=schema.get("default", True)
                 ).ask_async()
             elif schema["type"] == "password":
-                user_options[key] = await questionary.password(
-                    schema["message"]
-                ).ask_async()
+                user_options[key] = await questionary.password(schema["message"]).ask_async()
             else:
                 user_options[key] = await questionary.text(
                     schema["message"], default=schema.get("default", "")
                 ).ask_async()
-        report = await self.engine.install_single_tool(
-            tool_name, user_options, interactive=True
-        )
+        report = await self.engine.install_single_tool(tool_name, user_options, interactive=True)
         print_report(report)
 
     async def _select_tools(self) -> list:
@@ -139,9 +138,7 @@ class InteractiveDeployMenu:
         plugin = self.ctx.plugin_registry.get_plugin(tool)
         result = await plugin.backup(self.ctx)
         if result.get("success"):
-            console.print(
-                f"[green]Sauvegarde créée : {result.get('backup_id')}[/green]"
-            )
+            console.print(f"[green]Sauvegarde créée : {result.get('backup_id')}[/green]")
         else:
             console.print("[red]Échec sauvegarde[/red]")
 
@@ -179,8 +176,6 @@ class InteractiveDeployMenu:
     async def _health_check(self):
         console.print("Vérification de santé de tous les outils...")
         for plugin in self.ctx.plugin_registry.list_plugins():
-            # Vérification basique : on vérifie le statut du service principal
-            # On pourrait appeler health_check() sur chaque plugin
             try:
                 hc = await plugin.health_check(self.ctx)
                 console.print(f"{plugin.meta.name}: {hc.get('status', 'inconnu')}")
@@ -230,6 +225,4 @@ class InteractiveDeployMenu:
         if not installed:
             console.print("[yellow]Aucun outil installé trouvé[/yellow]")
             return None
-        return await questionary.select(
-            "Choisissez un outil :", choices=installed
-        ).ask_async()
+        return await questionary.select("Choisissez un outil :", choices=installed).ask_async()

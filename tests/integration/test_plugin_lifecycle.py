@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 @pytest.mark.asyncio
@@ -14,15 +15,9 @@ async def test_wazuh_install_simulation(engine, ctx):
 
     # Mock des méthodes qui interagissent avec le système
     with (
-        patch.object(
-            plugin.installer, "install", new_callable=AsyncMock
-        ) as mock_install,
-        patch.object(
-            plugin.configurator, "configure", new_callable=AsyncMock
-        ) as mock_configure,
-        patch.object(
-            plugin.validator, "validate", new_callable=AsyncMock
-        ) as mock_validate,
+        patch.object(plugin.installer, "install", new_callable=AsyncMock) as mock_install,
+        patch.object(plugin.configurator, "configure", new_callable=AsyncMock) as mock_configure,
+        patch.object(plugin.validator, "validate", new_callable=AsyncMock) as mock_validate,
     ):
         mock_install.return_value = {"success": True}
         mock_configure.return_value = {"success": True}
@@ -46,13 +41,9 @@ async def test_rollback_on_failure(engine, ctx):
     """Si l'installation échoue, le rollback doit être appelé"""
     plugin = ctx.plugin_registry.get_plugin("suricata")
     with (
-        patch.object(
-            plugin.installer, "install", new_callable=AsyncMock
-        ) as mock_install,
+        patch.object(plugin.installer, "install", new_callable=AsyncMock) as mock_install,
         patch.object(plugin, "rollback", new_callable=AsyncMock) as mock_rollback,
-        patch.object(
-            plugin.validator, "validate", new_callable=AsyncMock
-        ) as mock_validate,
+        patch.object(plugin.validator, "validate", new_callable=AsyncMock) as mock_validate,
     ):
         mock_install.return_value = {"success": False, "error": "Test failure"}
         mock_rollback.return_value = {"success": True}

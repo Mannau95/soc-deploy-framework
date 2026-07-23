@@ -2,9 +2,9 @@
 Service de gestion des paquets système
 """
 
-from typing import List, Optional
 from dataclasses import dataclass
 from enum import Enum
+from typing import List, Optional
 
 from soc_deploy.services.executor import CommandExecutor, ExecutionStatus
 
@@ -181,9 +181,7 @@ class PackageManager:
 
         return result
 
-    async def remove_packages(
-        self, packages: List[str], purge: bool = False
-    ) -> PackageResult:
+    async def remove_packages(self, packages: List[str], purge: bool = False) -> PackageResult:
         """
         Supprime des paquets
 
@@ -290,9 +288,7 @@ class PackageManager:
 
         return info
 
-    async def install_from_url(
-        self, url: str, output_path: Optional[str] = None
-    ) -> bool:
+    async def install_from_url(self, url: str, output_path: Optional[str] = None) -> bool:
         """
         Télécharge et installe un paquet depuis une URL
 
@@ -303,8 +299,8 @@ class PackageManager:
         Returns:
             True si succès
         """
-        import tempfile
         import os
+        import tempfile
 
         if not output_path:
             # Créer un fichier temporaire

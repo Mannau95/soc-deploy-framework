@@ -1,8 +1,9 @@
 from soc_deploy.plugins.base import PluginBase, PluginMetadata
-from .install import ShuffleInstaller
-from .configure import ShuffleConfigurator
-from .validate import ShuffleValidator
+
 from .backup_restore import ShuffleBackupRestore
+from .configure import ShuffleConfigurator
+from .install import ShuffleInstaller
+from .validate import ShuffleValidator
 
 
 class ShufflePlugin(PluginBase):

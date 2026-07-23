@@ -3,10 +3,11 @@ Plugin Suricata – IDS / IPS réseau
 """
 
 from soc_deploy.plugins.base import PluginBase, PluginMetadata
-from .install import SuricataInstaller
-from .configure import SuricataConfigurator
-from .validate import SuricataValidator
+
 from .backup_restore import SuricataBackupRestore
+from .configure import SuricataConfigurator
+from .install import SuricataInstaller
+from .validate import SuricataValidator
 
 
 class SuricataPlugin(PluginBase):

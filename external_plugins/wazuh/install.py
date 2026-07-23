@@ -3,10 +3,11 @@ Logique d'installation de la stack Wazuh
 Couvre : assistant officiel, paquets, Docker, multi-nœuds, cluster HA
 """
 
+import asyncio
 import os
 from pathlib import Path
 from typing import Any, Dict
-import asyncio
+
 from soc_deploy.services.executor import ExecutionStatus
 
 
@@ -35,9 +36,7 @@ class WazuhInstaller:
         if vm_max_map.status == ExecutionStatus.SUCCESS:
             val = int(vm_max_map.stdout.strip().split()[-1])
             if val < 262144:
-                issues.append(
-                    "vm.max_map_count doit être >= 262144 (Elasticsearch/OpenSearch)"
-                )
+                issues.append("vm.max_map_count doit être >= 262144 (Elasticsearch/OpenSearch)")
         return {"success": len(issues) == 0, "issues": issues}
 
     async def install(self, ctx, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -64,9 +63,7 @@ class WazuhInstaller:
                 ctx, architecture, version, admin_password, ssl, expose_dashboard
             )
         elif method == "packages":
-            return await self._install_via_packages(
-                ctx, architecture, version, admin_password, ssl
-            )
+            return await self._install_via_packages(ctx, architecture, version, admin_password, ssl)
         elif method == "docker":
             return await self._install_via_docker(
                 ctx, architecture, version, admin_password, expose_dashboard
@@ -120,9 +117,7 @@ class WazuhInstaller:
 
         # L'assistant a créé les fichiers de configuration, on lance l'installation
         install_cmd = f"bash {script_path} --install"
-        install_result = await ctx.executor.execute(
-            install_cmd, timeout=1800, sudo=True
-        )
+        install_result = await ctx.executor.execute(install_cmd, timeout=1800, sudo=True)
         if install_result.status != ExecutionStatus.SUCCESS:
             return {"success": False, "error": install_result.stderr}
 
@@ -214,9 +209,7 @@ nodes:
             compose_url = f"https://raw.githubusercontent.com/wazuh/wazuh-docker/v{version}/multi-node/docker-compose.yml"
 
         compose_path = Path("/tmp/wazuh-docker-compose.yml")
-        download = await ctx.executor.execute(
-            f"curl -sSfL {compose_url} -o {compose_path}"
-        )
+        download = await ctx.executor.execute(f"curl -sSfL {compose_url} -o {compose_path}")
         if download.status != ExecutionStatus.SUCCESS:
             return {
                 "success": False,
@@ -224,9 +217,7 @@ nodes:
             }
 
         # Lancer avec docker compose
-        up_result = await ctx.docker_manager.compose_up(
-            compose_path, detach=True, build=False
-        )
+        up_result = await ctx.docker_manager.compose_up(compose_path, detach=True, build=False)
         if not up_result:
             return {"success": False, "error": "docker-compose up a échoué"}
 

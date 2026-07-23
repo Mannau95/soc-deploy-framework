@@ -2,14 +2,14 @@
 Service de sauvegarde et restauration
 """
 
+import hashlib
 import shutil
 import tarfile
-import hashlib
-from pathlib import Path
-from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
+from typing import Dict, List, Optional
 
 from soc_deploy.utils.logger import LoggerManager
 
@@ -78,9 +78,7 @@ class BackupManager:
         Returns:
             Backup ou None en cas d'échec
         """
-        self.logger.info(
-            f"Création sauvegarde {target.backup_type.value} pour {target.tool_name}"
-        )
+        self.logger.info(f"Création sauvegarde {target.backup_type.value} pour {target.tool_name}")
 
         backup_id = self._generate_backup_id(target.tool_name)
         backup_dir = self.backup_root / target.tool_name
@@ -126,9 +124,7 @@ class BackupManager:
                 archive_path.unlink()
             return None
 
-    async def restore_backup(
-        self, backup: Backup, restore_paths: Dict[str, str]
-    ) -> bool:
+    async def restore_backup(self, backup: Backup, restore_paths: Dict[str, str]) -> bool:
         """
         Restaure une sauvegarde
 
@@ -232,9 +228,7 @@ class BackupManager:
                 meta_path.unlink()
             removed += 1
 
-        self.logger.info(
-            f"Nettoyage : {removed} anciennes sauvegardes supprimées pour {tool_name}"
-        )
+        self.logger.info(f"Nettoyage : {removed} anciennes sauvegardes supprimées pour {tool_name}")
         return removed
 
     def verify_backup(self, backup: Backup) -> bool:
@@ -300,9 +294,7 @@ class BackupManager:
                 size_bytes=data["size_bytes"],
                 checksum=data.get("checksum"),
                 path=(
-                    meta_path.parent / data["archive_name"]
-                    if data.get("archive_name")
-                    else None
+                    meta_path.parent / data["archive_name"] if data.get("archive_name") else None
                 ),
                 metadata=data.get("metadata", {}),
             )

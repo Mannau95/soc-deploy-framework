@@ -2,15 +2,17 @@
 Implémentations des commandes CLI, utilisant le moteur
 """
 
+from typing import Optional
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from soc_deploy.core.engine import Orchestrator
-from soc_deploy.core.context import ExecutionContext
-from soc_deploy.core.state import StateManager
-from soc_deploy.cli.menus import InteractiveDeployMenu
+
 from soc_deploy.cli.formatters import print_report
-from typing import Optional
+from soc_deploy.cli.menus import InteractiveDeployMenu
+from soc_deploy.core.context import ExecutionContext
+from soc_deploy.core.engine import Orchestrator
+from soc_deploy.core.state import StateManager
 
 console = Console()
 
@@ -24,9 +26,7 @@ def _get_context() -> ExecutionContext:
 
 async def check_command():
     ctx = _get_context()
-    console.print(
-        Panel.fit("🔍 Vérification des prérequis système", border_style="blue")
-    )
+    console.print(Panel.fit("🔍 Vérification des prérequis système", border_style="blue"))
     checks = ctx.system_checker.run_all_checks()
     report = ctx.system_checker.format_report(checks)
     console.print(report)
@@ -143,9 +143,7 @@ async def uninstall_command(tool: str):
     if not plugin:
         console.print(f"[red]Plugin {tool} introuvable[/red]")
         return
-    confirm = input(
-        f"Êtes-vous sûr de vouloir désinstaller {tool} ? (oui/non) "
-    ).lower()
+    confirm = input(f"Êtes-vous sûr de vouloir désinstaller {tool} ? (oui/non) ").lower()
     if confirm != "oui":
         console.print("Annulé")
         return

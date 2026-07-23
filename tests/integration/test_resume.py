@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 # Minimal in-test StateManager to satisfy tests when real implementation isn't available
@@ -44,22 +45,14 @@ async def test_resume_interrupted_deployment(engine, ctx):
     await state.add_tool_to_deployment(dep_id, "zeek", order=1)
     await state.start_deployment(dep_id)
     # Simuler une interruption après le backup
-    await state.save_checkpoint(
-        dep_id, "zeek", "BACKUP_DONE", {"backup": {"id": "bkp123"}}
-    )
+    await state.save_checkpoint(dep_id, "zeek", "BACKUP_DONE", {"backup": {"id": "bkp123"}})
     await state.pause_deployment(dep_id)
 
     plugin = ctx.plugin_registry.get_plugin("zeek")
     with (
-        patch.object(
-            plugin.installer, "install", new_callable=AsyncMock
-        ) as mock_install,
-        patch.object(
-            plugin.configurator, "configure", new_callable=AsyncMock
-        ) as mock_configure,
-        patch.object(
-            plugin.validator, "validate", new_callable=AsyncMock
-        ) as mock_validate,
+        patch.object(plugin.installer, "install", new_callable=AsyncMock) as mock_install,
+        patch.object(plugin.configurator, "configure", new_callable=AsyncMock) as mock_configure,
+        patch.object(plugin.validator, "validate", new_callable=AsyncMock) as mock_validate,
     ):
         mock_install.return_value = {"success": True}
         mock_configure.return_value = {"success": True}

@@ -2,7 +2,8 @@
 Registre des plugins
 """
 
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
+
 from soc_deploy.plugins.base import PluginBase
 
 

@@ -5,8 +5,8 @@ Gestionnaire d'état pour le suivi et la reprise des déploiements
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from soc_deploy.database.manager import DatabaseManager
 from soc_deploy.utils.logger import LoggerManager
@@ -61,9 +61,7 @@ class StateManager:
     async def pause_deployment(self, deployment_id: str) -> bool:
         """Met en pause le déploiement"""
         self.logger.info(f"Déploiement {deployment_id} mis en pause")
-        return await self.db.update_deployment_status(
-            deployment_id, DeploymentStatus.PAUSED.value
-        )
+        return await self.db.update_deployment_status(deployment_id, DeploymentStatus.PAUSED.value)
 
     async def complete_deployment(self, deployment_id: str) -> bool:
         """Marque le déploiement comme terminé"""
@@ -75,13 +73,9 @@ class StateManager:
     async def fail_deployment(self, deployment_id: str) -> bool:
         """Marque le déploiement comme échoué"""
         self.logger.error(f"Déploiement {deployment_id} échoué")
-        return await self.db.update_deployment_status(
-            deployment_id, DeploymentStatus.FAILED.value
-        )
+        return await self.db.update_deployment_status(deployment_id, DeploymentStatus.FAILED.value)
 
-    async def get_deployment_status(
-        self, deployment_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_deployment_status(self, deployment_id: str) -> Optional[Dict[str, Any]]:
         """Récupère le statut complet d'un déploiement"""
         dep = await self.db.get_deployment(deployment_id)
         if dep:
@@ -109,9 +103,7 @@ class StateManager:
         version: Optional[str] = None,
         order: int = 0,
     ) -> bool:
-        return await self.db.add_deployment_tool(
-            deployment_id, tool_name, version, order
-        )
+        return await self.db.add_deployment_tool(deployment_id, tool_name, version, order)
 
     async def set_tool_status(
         self,
@@ -121,13 +113,9 @@ class StateManager:
         config: Optional[Dict] = None,
     ) -> bool:
         config_json = json.dumps(config) if config else None
-        return await self.db.update_tool_status(
-            deployment_id, tool_name, status.value, config_json
-        )
+        return await self.db.update_tool_status(deployment_id, tool_name, status.value, config_json)
 
-    async def get_tool_status(
-        self, deployment_id: str, tool_name: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_tool_status(self, deployment_id: str, tool_name: str) -> Optional[Dict[str, Any]]:
         tools = await self.db.get_deployment_tools(deployment_id)
         for tool in tools:
             if tool["tool_name"] == tool_name:
@@ -208,6 +196,4 @@ class StateManager:
         tool_name: Optional[str] = None,
         details: Optional[str] = None,
     ) -> bool:
-        return await self.db.log_event(
-            deployment_id, level, message, tool_name, details
-        )
+        return await self.db.log_event(deployment_id, level, message, tool_name, details)

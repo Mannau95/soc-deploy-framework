@@ -2,7 +2,7 @@
 Résolveur de dépendances simple
 """
 
-from typing import List, Dict
+from typing import Dict, List
 
 
 class DependencyResolver:
