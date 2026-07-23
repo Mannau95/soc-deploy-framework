@@ -9,7 +9,7 @@ description = "Framework d'orchestration et de déploiement de SOC"
 authors = [
     {name = "Mannau KINTONOU", email = "jeanbaptistekintonou@gmail.com"}
 ]
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 readme = "README.md"
 requires-python = ">=3.10"
 keywords = ["soc", "deployment", "orchestration", "security"]
@@ -49,6 +49,10 @@ dev = [
 
 [project.scripts]
 soc-deploy = "soc_deploy.cli.main:app"
+
+# Configuration pour setuptools : inclure soc_deploy et external_plugins
+[tool.setuptools.packages.find]
+include = ["soc_deploy*", "external_plugins*"]
 
 [tool.black]
 line-length = 100
