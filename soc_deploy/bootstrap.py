@@ -19,7 +19,8 @@ from soc_deploy.services.validator import ValidatorService
 from soc_deploy.utils.logger import LoggerManager
 
 
-def create_context(config: FrameworkConfig = None) -> ExecutionContext:
+async def create_context(config: FrameworkConfig = None) -> ExecutionContext:
+    """Crée le contexte d'exécution (asynchrone)."""
     if not config:
         config = FrameworkConfig()
 
@@ -38,10 +39,8 @@ def create_context(config: FrameworkConfig = None) -> ExecutionContext:
     db_path = Path(__file__).parent / "database" / "state.db"
     db = DatabaseManager(db_path, logger)
 
-    # Initialiser la DB asynchrone (à faire dans une boucle asyncio)
-    import asyncio
-
-    asyncio.get_event_loop().run_until_complete(db.initialize())
+    # Initialisation asynchrone de la base de données
+    await db.initialize()
 
     registry = PluginRegistry()
     # Charger les plugins depuis external_plugins/

@@ -1,6 +1,7 @@
 import asyncio
 
 import pytest
+import pytest_asyncio  # ajouter l'import
 
 from soc_deploy.bootstrap import create_context
 from soc_deploy.core.engine import Orchestrator
@@ -14,10 +15,10 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def ctx():
     """Création d'un contexte réel avec DB temporaire"""
-    ctx = create_context()
+    ctx = await create_context()  # ajouter await
     # Réinitialiser la base pour chaque test
     await ctx.db.initialize()
     yield ctx

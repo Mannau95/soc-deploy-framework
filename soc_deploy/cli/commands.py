@@ -17,15 +17,15 @@ from soc_deploy.core.state import StateManager
 console = Console()
 
 
-def _get_context() -> ExecutionContext:
+async def _get_context() -> ExecutionContext:
     # Importer la factory qui construit le contexte avec tous les services
     from soc_deploy.bootstrap import create_context
 
-    return create_context()
+    return await create_context()
 
 
 async def check_command():
-    ctx = _get_context()
+    ctx = await _get_context()
     console.print(Panel.fit("🔍 Vérification des prérequis système", border_style="blue"))
     checks = ctx.system_checker.run_all_checks()
     report = ctx.system_checker.format_report(checks)
@@ -33,7 +33,7 @@ async def check_command():
 
 
 async def deploy_command(profile=None):
-    ctx = _get_context()
+    ctx = await _get_context()
     state = StateManager(ctx.db, ctx.logger)
     engine = Orchestrator(ctx, state)
 
@@ -52,7 +52,7 @@ async def deploy_command(profile=None):
 
 
 async def status_command():
-    ctx = _get_context()
+    ctx = await _get_context()
     state = StateManager(ctx.db, ctx.logger)
     deployments = await state.list_active_deployments()
     if not deployments:
@@ -68,7 +68,7 @@ async def status_command():
 
 
 async def install_command(tool: str, interactive: bool):
-    ctx = _get_context()
+    ctx = await _get_context()
     state = StateManager(ctx.db, ctx.logger)
     engine = Orchestrator(ctx, state)
 
@@ -81,7 +81,7 @@ async def install_command(tool: str, interactive: bool):
 
 
 async def configure_command(tool: str):
-    ctx = _get_context()
+    ctx = await _get_context()
     plugin = ctx.plugin_registry.get_plugin(tool)
     if not plugin:
         console.print(f"[red]Plugin introuvable : {tool}[/red]")
@@ -95,7 +95,7 @@ async def configure_command(tool: str):
 
 
 async def backup_command(tool: str):
-    ctx = _get_context()
+    ctx = await _get_context()
     plugin = ctx.plugin_registry.get_plugin(tool)
     if not plugin:
         console.print(f"[red]Plugin introuvable : {tool}[/red]")
@@ -108,7 +108,7 @@ async def backup_command(tool: str):
 
 
 async def restore_command(tool: str, backup_id: str):
-    ctx = _get_context()
+    ctx = await _get_context()
     plugin = ctx.plugin_registry.get_plugin(tool)
     if not plugin:
         console.print(f"[red]Plugin introuvable : {tool}[/red]")
@@ -121,7 +121,7 @@ async def restore_command(tool: str, backup_id: str):
 
 
 async def validate_command(tool: Optional[str] = None):
-    ctx = _get_context()
+    ctx = await _get_context()
     if tool:
         plugin = ctx.plugin_registry.get_plugin(tool)
         if not plugin:
@@ -138,7 +138,7 @@ async def validate_command(tool: Optional[str] = None):
 
 
 async def uninstall_command(tool: str):
-    ctx = _get_context()
+    ctx = await _get_context()
     plugin = ctx.plugin_registry.get_plugin(tool)
     if not plugin:
         console.print(f"[red]Plugin {tool} introuvable[/red]")
@@ -155,7 +155,7 @@ async def uninstall_command(tool: str):
 
 
 async def interactive_command():
-    ctx = _get_context()
+    ctx = await _get_context()
     state = StateManager(ctx.db, ctx.logger)
     engine = Orchestrator(ctx, state)
     menu = InteractiveDeployMenu(ctx, engine)
