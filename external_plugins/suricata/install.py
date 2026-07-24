@@ -8,9 +8,11 @@ from typing import Any, Dict
 class SuricataInstaller:
     async def check_prerequisites(self, ctx) -> Dict[str, Any]:
         issues = []
-        # Vérifier la présence de libpcap, libnetfilter-queue (pour IPS)
-        if not await ctx.executor.check_command_exists("suricata"):
-            issues.append("Suricata n'est pas installé (sera installé)")
+        # Vérifier uniquement les dépendances système critiques (libpcap, etc.)
+        # Ne pas signaler l'absence de Suricata comme une erreur
+        # (car il sera installé par le plugin)
+        if not await ctx.executor.check_command_exists("curl"):
+            issues.append("curl est requis pour télécharger les règles")
         return {"success": len(issues) == 0, "issues": issues}
 
     async def install(self, ctx, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -33,7 +35,5 @@ class SuricataInstaller:
 
     async def update(self, ctx) -> Dict[str, Any]:
         await ctx.package_manager.update_repositories()
-        result = await ctx.package_manager.install_packages(
-            ["suricata"], update_first=False
-        )
+        result = await ctx.package_manager.install_packages(["suricata"], update_first=False)
         return {"success": result.success}
