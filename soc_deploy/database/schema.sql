@@ -1,66 +1,65 @@
-"""
-Initialisation du contexte avec tous les services et plugins
-"""
+-- Schema de la base de données d'état du framework
 
-from pathlib import Path
+-- Table des déploiements
+CREATE TABLE IF NOT EXISTS deployments (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    profile TEXT,
+    status TEXT NOT NULL DEFAULT 'PLANNED',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP
+);
 
-from soc_deploy.core.context import ExecutionContext
-from soc_deploy.database.manager import DatabaseManager
-from soc_deploy.models.config import FrameworkConfig
-from soc_deploy.plugins.loader import PluginLoader
-from soc_deploy.plugins.registry import PluginRegistry
-from soc_deploy.services.backup import BackupManager
-from soc_deploy.services.docker import DockerManager
-from soc_deploy.services.executor import CommandExecutor
-from soc_deploy.services.file import FileManager
-from soc_deploy.services.package import PackageManager
-from soc_deploy.services.system import SystemChecker
-from soc_deploy.services.validator import ValidatorService
-from soc_deploy.utils.logger import LoggerManager
+-- Table des outils dans un déploiement
+CREATE TABLE IF NOT EXISTS deployment_tools (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    deployment_id TEXT NOT NULL,
+    tool_name TEXT NOT NULL,
+    version TEXT,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    install_order INTEGER,
+    config_json TEXT,
+    FOREIGN KEY (deployment_id) REFERENCES deployments(id) ON DELETE CASCADE
+);
 
+-- Table des checkpoints
+CREATE TABLE IF NOT EXISTS checkpoints (
+    id TEXT PRIMARY KEY,
+    deployment_id TEXT NOT NULL,
+    tool_name TEXT NOT NULL,
+    step TEXT NOT NULL,
+    state_data TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (deployment_id) REFERENCES deployments(id) ON DELETE CASCADE
+);
 
-async def create_context(config: FrameworkConfig = None) -> ExecutionContext:
-    """Crée le contexte d'exécution (asynchrone)."""
-    if not config:
-        config = FrameworkConfig()
+-- Table des sauvegardes
+CREATE TABLE IF NOT EXISTS backups (
+    id TEXT PRIMARY KEY,
+    deployment_id TEXT NOT NULL,
+    tool_name TEXT NOT NULL,
+    backup_path TEXT NOT NULL,
+    backup_type TEXT NOT NULL,
+    size_bytes INTEGER,
+    checksum TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (deployment_id) REFERENCES deployments(id) ON DELETE CASCADE
+);
 
-    log_dir = Path(config.log_dir)
-    log_dir.mkdir(parents=True, exist_ok=True)
-    logger = LoggerManager(log_dir, log_level=config.log_level)
+-- Table des journaux d'exécution
+CREATE TABLE IF NOT EXISTS execution_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    deployment_id TEXT NOT NULL,
+    tool_name TEXT,
+    log_level TEXT NOT NULL,
+    message TEXT NOT NULL,
+    details TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (deployment_id) REFERENCES deployments(id) ON DELETE CASCADE
+);
 
-    executor = CommandExecutor(logger)
-    system_checker = SystemChecker()
-    package_manager = PackageManager(executor)
-    docker_manager = DockerManager(executor)
-    file_manager = FileManager()
-    backup_manager = BackupManager(Path(config.backup_dir), logger)
-    validator = ValidatorService(executor, logger)
-
-    db_path = Path(__file__).parent / "database" / "state.db"
-    db = DatabaseManager(db_path, logger)
-
-    # Initialisation asynchrone de la base de données
-    await db.initialize()
-
-    registry = PluginRegistry()
-    # Charger les plugins depuis external_plugins/
-    plugin_dir = Path(__file__).parent.parent / "external_plugins"
-    PluginLoader.discover_and_load(plugin_dir, registry)
-
-    system_info = system_checker.get_system_info()
-
-    ctx = ExecutionContext(
-        config=config,
-        system_info=system_info,
-        logger=logger,
-        db=db,
-        executor=executor,
-        system_checker=system_checker,
-        package_manager=package_manager,
-        docker_manager=docker_manager,
-        file_manager=file_manager,
-        backup_manager=backup_manager,
-        validator=validator,
-        plugin_registry=registry,
-    )
-    return ctx
+-- Index
+CREATE INDEX IF NOT EXISTS idx_deployment_tools_deployment ON deployment_tools(deployment_id);
+CREATE INDEX IF NOT EXISTS idx_checkpoints_deployment ON checkpoints(deployment_id);
+CREATE INDEX IF NOT EXISTS idx_backups_deployment ON backups(deployment_id);
